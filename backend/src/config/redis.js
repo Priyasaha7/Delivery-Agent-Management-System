@@ -4,10 +4,7 @@ require('dotenv').config();
 let redis = null;
 
 try {
-  redis = new Redis({
-    host: process.env.REDIS_HOST || '127.0.0.1',
-    port: parseInt(process.env.REDIS_PORT || '6379', 10),
-    password: process.env.REDIS_PASSWORD || undefined,
+  const redisOptions = {
     lazyConnect: true,
     maxRetriesPerRequest: 1,
     retryStrategy: (times) => {
@@ -16,7 +13,18 @@ try {
       }
       return Math.min(times * 100, 1000);
     }
-  });
+  };
+
+  if (process.env.REDIS_URL) {
+    redis = new Redis(process.env.REDIS_URL, redisOptions);
+  } else {
+    redis = new Redis({
+      host: process.env.REDIS_HOST || '127.0.0.1',
+      port: parseInt(process.env.REDIS_PORT || '6379', 10),
+      password: process.env.REDIS_PASSWORD || undefined,
+      ...redisOptions
+    });
+  }
 
   redis.connect().catch((err) => {
     console.warn('Redis connection failed. Running without cache:', err.message);

@@ -1,14 +1,14 @@
 # Delivery Agent Management System
 
-A full-stack web application designed to manage delivery agent records, featuring real-time caching, persistent relational storage, and an interactive React dashboard.
+A full-stack web application designed to manage delivery agent records, featuring caching, persistent relational storage, and an interactive React dashboard.
 
 ---
 
 ## Tech Stack & Architecture Choices
 
-- **Backend:** Node.js with Express.js — lightweight, performant, and standard for RESTful microservices.
-- **Frontend:** React with Vite & Tailwind CSS — component-driven UI with instant HMR and responsive design.
-- **Database:** PostgreSQL — robust ACID-compliant relational database ensuring data integrity with strict constraints (unique emails, validated statuses, foreign keys/indexing).
+- **Backend:** Node.js with Express.js — lightweight, fast, and simple REST API architecture.
+- **Frontend:** React with Vite & Tailwind CSS — component-based UI with responsive design.
+- **Database:** PostgreSQL — ACID-compliant relational database ensuring data integrity with strict constraints (unique emails, validated statuses, indexing).
 - **Cache:** Redis via `ioredis` — in-memory key-value cache layer with automatic TTL and event-driven invalidation.
 
 ---
@@ -18,23 +18,23 @@ A full-stack web application designed to manage delivery agent records, featurin
 ```text
 ├── backend/
 │   ├── db/
-│   │   ├── schema.sql         # SQL schema definitions & indices
-│   │   ├── migrate.js        # Migration runner script
-│   │   └── seed.js           # Sample dataset seeder
+│   │   ├── schema.sql              # SQL schema definitions & indices
+│   │   ├── migrate.js              # Migration runner script
+│   │   └── seed.js                 # Sample dataset seeder
 │   ├── src/
 │   │   ├── config/
-│   │   │   ├── db.js         # PostgreSQL connection pool (pg)
-│   │   │   └── redis.js      # Redis client configuration & fallback
+│   │   │   ├── db.js               # PostgreSQL connection pool (pg)
+│   │   │   └── redis.js            # Redis client configuration & fallback
 │   │   ├── controllers/
-│   │   │   └── agentController.js # CRUD handlers and caching logic
+│   │   │   └── agentController.js  # CRUD handlers and caching logic
 │   │   ├── routes/
-│   │   │   └── agentRoutes.js # REST endpoint definitions
+│   │   │   └── agentRoutes.js      # REST endpoint definitions
 │   │   ├── utils/
-│   │   │   └── cache.js      # Redis helper utilities (get, set, del)
-│   │   ├── app.js            # Express app configuration
-│   │   └── server.js         # HTTP server entrypoint
+│   │   │   └── cache.js            # Redis helper utilities (get, set, del)
+│   │   ├── app.js                  # Express app configuration
+│   │   └── server.js               # HTTP server entrypoint
 │   ├── tests/
-│   │   └── agent.test.js     # Jest & Supertest API test suite
+│   │   └── agent.test.js           # Jest & Supertest API test suite
 │   ├── .env.example
 │   └── package.json
 ├── frontend/
@@ -47,13 +47,12 @@ A full-stack web application designed to manage delivery agent records, featurin
 │   │   │   ├── AgentDetailsModal.jsx
 │   │   │   └── DeleteConfirmModal.jsx
 │   │   ├── services/
-│   │   │   └── api.js        # API service wrapper
+│   │   │   └── api.js              # API service wrapper
 │   │   ├── App.jsx
 │   │   ├── main.jsx
 │   │   └── index.css
 │   ├── .env.example
 │   └── package.json
-├── docker-compose.yml        # PostgreSQL & Redis container setup
 └── README.md
 ```
 
@@ -77,7 +76,7 @@ Each delivery agent includes:
 
 ### What is Cached?
 1. **Agent List (`agents:list:*`):**
-   - Stores query results partitioned by filter criteria (e.g., `agents:list:active:Downtown:none`).
+   - Stores query results partitioned by filter criteria (e.g., `agents:list:active:all:none`).
    - Time to Live (TTL): **300 seconds (5 minutes)**.
 2. **Individual Agent Details (`agent:<id>`):**
    - Stores single agent profile details.
@@ -100,28 +99,38 @@ To guarantee strict consistency:
 - **On Agent Deletion (`DELETE /api/agents/:id`):**
   The specific agent key (`agent:<id>`), all list cache keys (`agents:list*`), and statistics (`agents:stats`) are purged.
 - **Graceful Degradation:**
-  If Redis is down or unreachable, the application automatically logs a notice and transparently falls back to PostgreSQL without interrupting user traffic.
+  If Redis is not running or temporarily unreachable, the application automatically catches the error and transparently falls back to PostgreSQL without interrupting user traffic.
 
 ---
 
 ## Environment Variables
 
 ### Backend (`backend/.env`)
-Copy `backend/.env.example` to `backend/.env`:
+Create `backend/.env` from `backend/.env.example`:
 
 ```env
 PORT=5000
+
+# Option A: Local PostgreSQL
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
-DB_PASSWORD=postgres
+DB_PASSWORD=your_postgres_password
 DB_NAME=delivery_db
+
+# Option B: Cloud PostgreSQL (e.g. Neon, Supabase, Render)
+# DATABASE_URL=postgresql://user:password@host:5432/delivery_db?sslmode=require
+
+# Option A: Local Redis
 REDIS_HOST=127.0.0.1
 REDIS_PORT=6379
+
+# Option B: Cloud Redis (e.g. Upstash)
+# REDIS_URL=redis://default:password@host:6379
 ```
 
 ### Frontend (`frontend/.env`)
-Copy `frontend/.env.example` to `frontend/.env`:
+Create `frontend/.env` from `frontend/.env.example`:
 
 ```env
 VITE_API_URL=http://localhost:5000/api/agents
@@ -133,20 +142,17 @@ VITE_API_URL=http://localhost:5000/api/agents
 
 ### 1. Prerequisites
 - Node.js (v18 or higher)
-- npm or yarn
-- Docker (optional, for running PostgreSQL and Redis via docker-compose) or local PostgreSQL & Redis instances
+- PostgreSQL (installed locally or a free cloud database like Neon.tech)
+- Redis (installed locally or a free cloud Redis like Upstash, or run without Redis thanks to the graceful fallback)
 
-### 2. Start PostgreSQL and Redis (Docker)
-If you have Docker installed, start both services with:
+### 2. Create Database & Run Migrations
+In PostgreSQL (via pgAdmin, psql, or your cloud console), create the database:
 
-```bash
-docker compose up -d
+```sql
+CREATE DATABASE delivery_db;
 ```
 
-*Note: Alternatively, you can use your existing local PostgreSQL (port 5432) and Redis (port 6379) services.*
-
-### 3. Database Migration & Seed
-Run the migration script to create the table and indices, then optionally seed initial test records:
+Then run the migration script to create the table and indices, and optionally seed sample data:
 
 ```bash
 cd backend
@@ -154,7 +160,7 @@ npm run migrate
 npm run seed
 ```
 
-### 4. Start the Backend API
+### 3. Start the Backend API
 From the `backend` folder:
 
 ```bash
@@ -163,7 +169,7 @@ npm run dev
 
 The API will start at `http://localhost:5000`. Test health status at `http://localhost:5000/health`.
 
-### 5. Start the React Frontend
+### 4. Start the React Frontend
 In a separate terminal window:
 
 ```bash
@@ -231,39 +237,12 @@ Open your browser at `http://localhost:3000`.
 
 ---
 
-## Testing
+## Automated Testing
 
-Automated test suites verify CRUD functionality, validation rules, HTTP status codes, and Redis cache HIT/MISS behavior.
-
-To run the backend test suite:
+Run the test suite:
 
 ```bash
 cd backend
 npm test
 ```
-
-### Manual Testing with cURL
-
-```bash
-# 1. Health check
-curl http://localhost:5000/health
-
-# 2. Create an agent
-curl -X POST http://localhost:5000/api/agents \
-  -H "Content-Type: application/json" \
-  -d '{"full_name":"Test Agent","phone":"9999999999","email":"test@example.com","service_area":"Central","status":"active"}'
-
-# 3. Get all agents (Cache MISS on first run, HIT on second run)
-curl -i http://localhost:5000/api/agents
-
-# 4. Get specific agent
-curl -i http://localhost:5000/api/agents/1
-
-# 5. Update agent status
-curl -X PUT http://localhost:5000/api/agents/1 \
-  -H "Content-Type: application/json" \
-  -d '{"status":"inactive"}'
-
-# 6. Delete agent
-curl -X DELETE http://localhost:5000/api/agents/1
-```
+All 12 automated tests verify CRUD flows, validations, HTTP status codes, and cache HIT/MISS behavior without needing external services running.
