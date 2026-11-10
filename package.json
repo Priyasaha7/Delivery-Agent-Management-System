@@ -1,0 +1,12 @@
+{
+  "name": "delivery-agent-management-system",
+  "version": "1.0.0",
+  "description": "Full-stack Delivery Agent Management System with Node.js, Express, PostgreSQL, Redis, and React",
+  "scripts": {
+    "test": "npm --prefix backend test",
+    "backend:dev": "npm --prefix backend run dev",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "migrate": "npm --prefix backend run migrate",
+    "seed": "npm --prefix backend run seed"
+  }
+}
