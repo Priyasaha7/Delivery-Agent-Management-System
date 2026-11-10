@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Navbar from './components/Navbar';
 import StatsOverview from './components/StatsOverview';
 import AgentList from './components/AgentList';
@@ -31,12 +31,16 @@ export default function App() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [notification, setNotification] = useState(null);
+  const notifyTimerRef = useRef(null);
 
   function showNotification(type, message) {
+    if (notifyTimerRef.current) {
+      clearTimeout(notifyTimerRef.current);
+    }
     setNotification({ type, message });
-    setTimeout(() => {
+    notifyTimerRef.current = setTimeout(() => {
       setNotification(null);
-    }, 4000);
+    }, 5000);
   }
 
   const loadData = useCallback(async () => {
