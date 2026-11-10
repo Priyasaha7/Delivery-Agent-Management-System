@@ -1,4 +1,7 @@
-const BASE_URL = '/api/agents';
+const RAW_API_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.trim().replace(/\/$/, '') : '';
+const BASE_URL = RAW_API_URL
+  ? (RAW_API_URL.endsWith('/api/agents') ? RAW_API_URL : `${RAW_API_URL}/api/agents`)
+  : '/api/agents';
 
 async function parseResponse(res) {
   try {
