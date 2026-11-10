@@ -10,24 +10,32 @@ function validateAgentInput(data, isUpdate = false) {
   if (!isUpdate || full_name !== undefined) {
     if (!full_name || typeof full_name !== 'string' || !full_name.trim()) {
       errors.push('Full name is required');
+    } else if (full_name.trim().length > 100) {
+      errors.push('Full name cannot exceed 100 characters');
     }
   }
 
   if (!isUpdate || phone !== undefined) {
     if (!phone || typeof phone !== 'string' || !phone.trim()) {
       errors.push('Phone number is required');
+    } else if (phone.trim().length > 20) {
+      errors.push('Phone number cannot exceed 20 characters');
     }
   }
 
   if (!isUpdate || email !== undefined) {
     if (!email || typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
       errors.push('A valid email address is required');
+    } else if (email.trim().length > 120) {
+      errors.push('Email address cannot exceed 120 characters');
     }
   }
 
   if (!isUpdate || service_area !== undefined) {
     if (!service_area || typeof service_area !== 'string' || !service_area.trim()) {
       errors.push('Service area is required');
+    } else if (service_area.trim().length > 100) {
+      errors.push('Service area cannot exceed 100 characters');
     }
   }
 
@@ -52,7 +60,7 @@ async function getAgents(req, res) {
   try {
     const { status, service_area, search } = req.query;
 
-    const cacheKey = `agents:list:${status || 'all'}:${service_area || 'all'}:${search || 'none'}`;
+    const cacheKey = `agents:list:${status || 'all'}:${service_area || 'all'}:${search ? search.trim() : 'none'}`;
     const cached = await getCache(cacheKey);
 
     if (cached) {
@@ -63,17 +71,17 @@ async function getAgents(req, res) {
     let query = 'SELECT * FROM agents WHERE 1=1';
     const params = [];
 
-    if (status) {
+    if (status && status !== 'all') {
       params.push(status);
       query += ` AND status = $${params.length}`;
     }
 
-    if (service_area) {
+    if (service_area && service_area.trim()) {
       params.push(`%${service_area.trim()}%`);
       query += ` AND service_area ILIKE $${params.length}`;
     }
 
-    if (search) {
+    if (search && search.trim()) {
       params.push(`%${search.trim()}%`);
       query += ` AND (full_name ILIKE $${params.length} OR email ILIKE $${params.length} OR phone ILIKE $${params.length} OR service_area ILIKE $${params.length})`;
     }
@@ -94,7 +102,7 @@ async function getAgents(req, res) {
 async function getAgentById(req, res) {
   try {
     const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
+    if (isNaN(id) || id <= 0) {
       return res.status(400).json({ success: false, error: 'Invalid agent ID format' });
     }
 
@@ -125,6 +133,10 @@ async function getAgentById(req, res) {
 
 async function createAgent(req, res) {
   try {
+    if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+      return res.status(400).json({ success: false, error: 'Request body must be a valid JSON object' });
+    }
+
     const errors = validateAgentInput(req.body);
     if (errors.length > 0) {
       return res.status(400).json({ success: false, errors });
@@ -168,8 +180,18 @@ async function createAgent(req, res) {
 async function updateAgent(req, res) {
   try {
     const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
+    if (isNaN(id) || id <= 0) {
       return res.status(400).json({ success: false, error: 'Invalid agent ID format' });
+    }
+
+    if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+      return res.status(400).json({ success: false, error: 'Request body must be a valid JSON object' });
+    }
+
+    const updatableFields = ['full_name', 'phone', 'email', 'service_area', 'status'];
+    const hasFieldToUpdate = updatableFields.some((field) => req.body[field] !== undefined);
+    if (!hasFieldToUpdate) {
+      return res.status(400).json({ success: false, error: 'At least one field is required to update' });
     }
 
     const existingAgent = await pool.query('SELECT * FROM agents WHERE id = $1', [id]);
@@ -222,7 +244,7 @@ async function updateAgent(req, res) {
 async function deleteAgent(req, res) {
   try {
     const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
+    if (isNaN(id) || id <= 0) {
       return res.status(400).json({ success: false, error: 'Invalid agent ID format' });
     }
 

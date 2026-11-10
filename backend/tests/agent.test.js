@@ -57,6 +57,23 @@ describe('Delivery Agent API Tests', () => {
     });
   });
 
+  describe('GET /api/agents/stats', () => {
+    it('should return aggregated statistics', async () => {
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ total: 5, active: 4, inactive: 1, areas: 5 }]
+      });
+
+      const res1 = await request(app).get('/api/agents/stats');
+      expect(res1.status).toBe(200);
+      expect(res1.body.data.total).toBe(5);
+      expect(res1.headers['x-cache']).toBe('MISS');
+
+      const res2 = await request(app).get('/api/agents/stats');
+      expect(res2.status).toBe(200);
+      expect(res2.headers['x-cache']).toBe('HIT');
+    });
+  });
+
   describe('POST /api/agents', () => {
     it('should fail with 400 when required fields are missing', async () => {
       const res = await request(app)
@@ -80,6 +97,20 @@ describe('Delivery Agent API Tests', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
+    });
+
+    it('should fail with 400 when field exceeds max length', async () => {
+      const res = await request(app)
+        .post('/api/agents')
+        .send({
+          full_name: 'A'.repeat(105),
+          phone: '1234567890',
+          email: 'valid@example.com',
+          service_area: 'Central'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.errors).toContain('Full name cannot exceed 100 characters');
     });
 
     it('should fail with 409 if email already exists', async () => {
@@ -133,9 +164,25 @@ describe('Delivery Agent API Tests', () => {
       expect(res2.headers['x-cache']).toBe('HIT');
       expect(res2.body.data.length).toBe(1);
     });
+
+    it('should ignore status filter when status=all', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: mockRows });
+
+      const res = await request(app).get('/api/agents?status=all');
+      expect(res.status).toBe(200);
+      expect(res.body.data.length).toBe(1);
+    });
   });
 
   describe('GET /api/agents/:id', () => {
+    it('should return 400 for non-numeric or invalid ID format', async () => {
+      const res1 = await request(app).get('/api/agents/abc');
+      expect(res1.status).toBe(400);
+
+      const res2 = await request(app).get('/api/agents/-5');
+      expect(res2.status).toBe(400);
+    });
+
     it('should return 404 when agent is not found', async () => {
       mockQuery.mockResolvedValueOnce({ rows: [] });
 
@@ -155,6 +202,15 @@ describe('Delivery Agent API Tests', () => {
   });
 
   describe('PUT /api/agents/:id', () => {
+    it('should return 400 if request body has no updatable fields', async () => {
+      const res = await request(app)
+        .put('/api/agents/1')
+        .send({});
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain('At least one field is required');
+    });
+
     it('should return 404 if updating non-existent agent', async () => {
       mockQuery.mockResolvedValueOnce({ rows: [] });
 
