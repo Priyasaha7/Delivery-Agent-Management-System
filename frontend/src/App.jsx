@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import StatsOverview from './components/StatsOverview';
 import AgentList from './components/AgentList';
+import OverviewView from './components/OverviewView';
+import ServiceAreasView from './components/ServiceAreasView';
+import SettingsView from './components/SettingsView';
 import AgentFormModal from './components/AgentFormModal';
 import AgentDetailsModal from './components/AgentDetailsModal';
 import DeleteConfirmModal from './components/DeleteConfirmModal';
@@ -12,7 +15,7 @@ import {
   updateAgent,
   deleteAgent
 } from './services/api';
-import { Plus, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, CheckCircle, AlertCircle, User } from 'lucide-react';
 
 export default function App() {
   const [agents, setAgents] = useState([]);
@@ -128,63 +131,86 @@ export default function App() {
     }
   }
 
+  const tabTitles = {
+    agents: {
+      breadcrumb: 'Delivery agents',
+      title: 'Delivery Agent Hub',
+      subtitle: 'Fleet & Personnel Management',
+    },
+    overview: {
+      breadcrumb: 'Overview',
+      title: 'Fleet Overview',
+      subtitle: 'System metrics and operational health',
+    },
+    areas: {
+      breadcrumb: 'Service areas',
+      title: 'Service Areas',
+      subtitle: 'Regional fleet allocation & coverage',
+    },
+    settings: {
+      breadcrumb: 'Settings',
+      title: 'System Settings',
+      subtitle: 'Architecture, caching and database configuration',
+    },
+  };
+
+  const activeTabMeta = tabTitles[currentTab] || tabTitles.agents;
+
   return (
-    <div className="min-h-screen bg-[#f8f8f7] text-stone-900 flex font-sans antialiased">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex font-sans antialiased">
       <Sidebar currentTab={currentTab} onTabChange={setCurrentTab} />
 
       <main className="flex-1 min-w-0 py-7 px-8 lg:px-12 flex flex-col">
+        {/* Top Header */}
         <div className="flex items-center justify-between mb-6">
-          <div className="text-xs font-medium text-stone-400">
+          <div className="text-xs font-medium text-slate-400">
             <span>Fleet</span>
-            <span className="mx-2 text-stone-300">/</span>
-            <span className="text-stone-600">Delivery agents</span>
+            <span className="mx-2 text-slate-300">/</span>
+            <span className="text-slate-600 font-semibold">{activeTabMeta.breadcrumb}</span>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-stone-300 overflow-hidden flex items-center justify-center text-xs font-semibold text-stone-700">
-              <img
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80"
-                alt="Admin avatar"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-600">
+              <User className="w-4 h-4 stroke-[2]" />
             </div>
-            <span className="text-xs font-semibold text-stone-800">Admin</span>
+            <span className="text-xs font-semibold text-[#0b1e36]">Admin</span>
           </div>
         </div>
 
+        {/* Title & Action */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-stone-900">
-              Delivery Agent Hub
+            <h1 className="text-2xl font-bold tracking-tight text-[#0b1e36]">
+              {activeTabMeta.title}
             </h1>
-            <p className="text-xs text-stone-500 mt-0.5">
-              Fleet & Personnel Management
+            <p className="text-xs text-slate-500 mt-0.5">
+              {activeTabMeta.subtitle}
             </p>
           </div>
 
-          <button
-            onClick={handleOpenCreateModal}
-            className="inline-flex items-center gap-1.5 bg-[#0f172a] hover:bg-stone-800 text-white text-xs font-medium px-4 py-2.5 rounded-lg shadow-sm transition"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add Delivery Agent</span>
-          </button>
+          {currentTab === 'agents' && (
+            <button
+              onClick={handleOpenCreateModal}
+              className="inline-flex items-center gap-1.5 bg-[#0b1e36] hover:bg-[#132f54] text-white text-xs font-medium px-4 py-2.5 rounded-lg shadow-sm transition cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Delivery Agent</span>
+            </button>
+          )}
         </div>
 
+        {/* Notifications */}
         {notification && (
           <div
             className={`mb-5 p-3 rounded-xl flex items-center justify-between text-xs transition ${
               notification.type === 'success'
-                ? 'bg-stone-100 text-stone-800 border border-stone-200'
+                ? 'bg-slate-100 text-slate-800 border border-slate-200'
                 : 'bg-rose-50 text-rose-800 border border-rose-200'
             }`}
           >
             <div className="flex items-center gap-2">
               {notification.type === 'success' ? (
-                <CheckCircle className="w-4 h-4 text-stone-700 shrink-0" />
+                <CheckCircle className="w-4 h-4 text-[#0b1e36] shrink-0" />
               ) : (
                 <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
               )}
@@ -192,26 +218,49 @@ export default function App() {
             </div>
             <button
               onClick={() => setNotification(null)}
-              className="text-stone-400 hover:text-stone-700 ml-4"
+              className="text-slate-400 hover:text-slate-700 ml-4 cursor-pointer"
             >
               Dismiss
             </button>
           </div>
         )}
 
-        <StatsOverview stats={stats} />
+        {/* Dynamic Views */}
+        {currentTab === 'agents' && (
+          <>
+            <StatsOverview stats={stats} />
+            <AgentList
+              agents={agents}
+              loading={loading}
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onView={handleOpenDetailsModal}
+              onEdit={handleOpenEditModal}
+              onDelete={handleOpenDeleteModal}
+              onToggleStatus={handleToggleStatus}
+              isCached={isCached}
+            />
+          </>
+        )}
 
-        <AgentList
-          agents={agents}
-          loading={loading}
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          onView={handleOpenDetailsModal}
-          onEdit={handleOpenEditModal}
-          onDelete={handleOpenDeleteModal}
-          onToggleStatus={handleToggleStatus}
-          isCached={isCached}
-        />
+        {currentTab === 'overview' && (
+          <OverviewView
+            stats={stats}
+            agents={agents}
+            onNavigateToAgents={() => setCurrentTab('agents')}
+          />
+        )}
+
+        {currentTab === 'areas' && (
+          <ServiceAreasView
+            agents={agents}
+            onNavigateToAgents={() => setCurrentTab('agents')}
+          />
+        )}
+
+        {currentTab === 'settings' && (
+          <SettingsView isCached={isCached} />
+        )}
       </main>
 
       <AgentFormModal

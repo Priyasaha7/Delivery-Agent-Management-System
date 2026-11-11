@@ -15,6 +15,17 @@ export default function AgentFormModal({ isOpen, onClose, onSubmit, editingAgent
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     if (editingAgent) {
       setFormData({
         full_name: editingAgent.full_name || '',
@@ -69,15 +80,15 @@ export default function AgentFormModal({ isOpen, onClose, onSubmit, editingAgent
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-stone-200/80">
-        <div className="flex justify-between items-center pb-4 border-b border-stone-100">
-          <h2 className="text-lg font-bold text-stone-900">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+        <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+          <h2 className="text-lg font-bold text-[#0b1e36]">
             {editingAgent ? 'Edit Delivery Agent' : 'Create New Delivery Agent'}
           </h2>
           <button
             onClick={onClose}
-            className="text-stone-400 hover:text-stone-700 p-1 rounded-md transition"
+            className="text-slate-400 hover:text-slate-700 p-1 rounded-md transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -91,7 +102,7 @@ export default function AgentFormModal({ isOpen, onClose, onSubmit, editingAgent
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-stone-600 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
               Full Name <span className="text-rose-500">*</span>
             </label>
             <input
@@ -100,14 +111,14 @@ export default function AgentFormModal({ isOpen, onClose, onSubmit, editingAgent
               value={formData.full_name}
               onChange={handleChange}
               placeholder="e.g. Rahul Verma"
-              className="w-full px-3 py-2 text-sm border border-stone-300/80 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-400 text-stone-900"
+              className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0b1e36] text-slate-900"
               required
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-stone-600 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
                 Phone Number <span className="text-rose-500">*</span>
               </label>
               <input
@@ -116,13 +127,13 @@ export default function AgentFormModal({ isOpen, onClose, onSubmit, editingAgent
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="e.g. +91 98765 43210"
-                className="w-full px-3 py-2 text-sm border border-stone-300/80 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-400 text-stone-900"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0b1e36] text-slate-900"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-stone-600 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
                 Email Address <span className="text-rose-500">*</span>
               </label>
               <input
@@ -131,14 +142,14 @@ export default function AgentFormModal({ isOpen, onClose, onSubmit, editingAgent
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="e.g. rahul.verma@example.com"
-                className="w-full px-3 py-2 text-sm border border-stone-300/80 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-400 text-stone-900"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0b1e36] text-slate-900"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-stone-600 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
               Service Area / Region <span className="text-rose-500">*</span>
             </label>
             <input
@@ -147,39 +158,39 @@ export default function AgentFormModal({ isOpen, onClose, onSubmit, editingAgent
               value={formData.service_area}
               onChange={handleChange}
               placeholder="e.g. North Delhi"
-              className="w-full px-3 py-2 text-sm border border-stone-300/80 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-400 text-stone-900"
+              className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0b1e36] text-slate-900"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-stone-600 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
               Status <span className="text-rose-500">*</span>
             </label>
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-stone-300/80 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-400 text-stone-900 bg-white"
+              className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0b1e36] text-slate-900 bg-white"
             >
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-stone-100 mt-6">
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 mt-6">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-xs font-medium text-stone-600 hover:bg-stone-100 rounded-lg transition"
+              className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-lg shadow-sm transition disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#0b1e36] hover:bg-[#132f54] rounded-lg shadow-sm transition disabled:opacity-50"
             >
               {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {editingAgent ? 'Save Changes' : 'Create Agent'}
