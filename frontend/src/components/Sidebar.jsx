@@ -1,12 +1,11 @@
 import React from 'react';
-import { LayoutDashboard, Truck, Map, Settings } from 'lucide-react';
+import { LayoutDashboard, Truck, Map } from 'lucide-react';
 
 export default function Sidebar({ currentTab = 'agents', onTabChange }) {
   const navItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'agents', label: 'Delivery agents', icon: Truck },
     { id: 'areas', label: 'Service areas', icon: Map },
-    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   return (

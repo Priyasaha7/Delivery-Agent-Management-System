@@ -4,7 +4,6 @@ import StatsOverview from './components/StatsOverview';
 import AgentList from './components/AgentList';
 import OverviewView from './components/OverviewView';
 import ServiceAreasView from './components/ServiceAreasView';
-import SettingsView from './components/SettingsView';
 import AgentFormModal from './components/AgentFormModal';
 import AgentDetailsModal from './components/AgentDetailsModal';
 import DeleteConfirmModal from './components/DeleteConfirmModal';
@@ -170,11 +169,6 @@ export default function App() {
       title: 'Service Areas',
       subtitle: 'Regional fleet allocation & coverage',
     },
-    settings: {
-      breadcrumb: 'Settings',
-      title: 'System Settings',
-      subtitle: 'Architecture, caching and database configuration',
-    },
   };
 
   const activeTabMeta = tabTitles[currentTab] || tabTitles.agents;
@@ -284,10 +278,6 @@ export default function App() {
             agents={agents}
             onNavigateToAgents={() => setCurrentTab('agents')}
           />
-        )}
-
-        {currentTab === 'settings' && (
-          <SettingsView isCached={isCached} />
         )}
       </main>
 
