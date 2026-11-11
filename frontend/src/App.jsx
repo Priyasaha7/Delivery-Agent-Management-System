@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import StatsOverview from './components/StatsOverview';
 import AgentList from './components/AgentList';
 import AgentFormModal from './components/AgentFormModal';
@@ -12,7 +12,7 @@ import {
   updateAgent,
   deleteAgent
 } from './services/api';
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function App() {
   const [agents, setAgents] = useState([]);
@@ -20,6 +20,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [isCached, setIsCached] = useState(false);
   const [filters, setFilters] = useState({ search: '', status: 'all' });
+  const [currentTab, setCurrentTab] = useState('agents');
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState(null);
@@ -105,10 +106,7 @@ export default function App() {
     const nextStatus = agent.status === 'active' ? 'inactive' : 'active';
     try {
       await updateAgent(agent.id, { status: nextStatus });
-      showNotification(
-        'success',
-        `Agent "${agent.full_name}" is now ${nextStatus}`
-      );
+      showNotification('success', `Agent "${agent.full_name}" is now ${nextStatus}`);
       await loadData();
     } catch (err) {
       showNotification('error', err.message || 'Failed to update status');
@@ -131,29 +129,70 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Navbar onOpenCreateModal={handleOpenCreateModal} />
+    <div className="min-h-screen bg-[#f8f8f7] text-stone-900 flex font-sans antialiased">
+      <Sidebar currentTab={currentTab} onTabChange={setCurrentTab} />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 min-w-0 py-7 px-8 lg:px-12 flex flex-col">
+        <div className="flex items-center justify-between mb-6">
+          <div className="text-xs font-medium text-stone-400">
+            <span>Fleet</span>
+            <span className="mx-2 text-stone-300">/</span>
+            <span className="text-stone-600">Delivery agents</span>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-stone-300 overflow-hidden flex items-center justify-center text-xs font-semibold text-stone-700">
+              <img
+                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80"
+                alt="Admin avatar"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+            <span className="text-xs font-semibold text-stone-800">Admin</span>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-stone-900">
+              Delivery Agent Hub
+            </h1>
+            <p className="text-xs text-stone-500 mt-0.5">
+              Fleet & Personnel Management
+            </p>
+          </div>
+
+          <button
+            onClick={handleOpenCreateModal}
+            className="inline-flex items-center gap-1.5 bg-[#0f172a] hover:bg-stone-800 text-white text-xs font-medium px-4 py-2.5 rounded-lg shadow-sm transition"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Delivery Agent</span>
+          </button>
+        </div>
+
         {notification && (
           <div
-            className={`mb-6 p-4 rounded-xl flex items-center justify-between text-sm shadow-sm transition-all ${
+            className={`mb-5 p-3 rounded-xl flex items-center justify-between text-xs transition ${
               notification.type === 'success'
-                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                ? 'bg-stone-100 text-stone-800 border border-stone-200'
                 : 'bg-rose-50 text-rose-800 border border-rose-200'
             }`}
           >
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               {notification.type === 'success' ? (
-                <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                <CheckCircle className="w-4 h-4 text-stone-700 shrink-0" />
               ) : (
-                <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
               )}
-              <span className="font-medium">{notification.message}</span>
+              <span>{notification.message}</span>
             </div>
             <button
               onClick={() => setNotification(null)}
-              className="text-xs font-semibold underline hover:opacity-75"
+              className="text-stone-400 hover:text-stone-700 ml-4"
             >
               Dismiss
             </button>
@@ -174,10 +213,6 @@ export default function App() {
           isCached={isCached}
         />
       </main>
-
-      <footer className="border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
-        Delivery Agent Management System • Node.js, Express, PostgreSQL, Redis, React
-      </footer>
 
       <AgentFormModal
         isOpen={isFormOpen}
