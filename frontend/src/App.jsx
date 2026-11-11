@@ -22,7 +22,7 @@ export default function App() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isCached, setIsCached] = useState(false);
-  const [filters, setFilters] = useState({ search: '', status: 'all' });
+  const [filters, setFilters] = useState({ search: '', status: 'all', service_area: '' });
   const [currentTab, setCurrentTab] = useState('agents');
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -36,6 +36,29 @@ export default function App() {
 
   const [notification, setNotification] = useState(null);
   const notifyTimerRef = useRef(null);
+
+  // Global scroll lock preventing background from scrolling when ANY modal is open
+  const isAnyModalOpen = isFormOpen || isDetailsOpen || Boolean(deletingAgent);
+
+  useEffect(() => {
+    if (isAnyModalOpen) {
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [isAnyModalOpen]);
 
   function showNotification(type, message) {
     if (notifyTimerRef.current) {
@@ -135,7 +158,7 @@ export default function App() {
     agents: {
       breadcrumb: 'Delivery agents',
       title: 'Delivery Agent Hub',
-      subtitle: 'Fleet & Personnel Management',
+      subtitle: 'Operations & Delivery Personnel Management',
     },
     overview: {
       breadcrumb: 'Overview',
@@ -161,10 +184,10 @@ export default function App() {
       <Sidebar currentTab={currentTab} onTabChange={setCurrentTab} />
 
       <main className="flex-1 min-w-0 py-7 px-8 lg:px-12 flex flex-col">
-        {/* Top Header */}
+        {/* Top Header Breadcrumb & Admin Profile */}
         <div className="flex items-center justify-between mb-6">
           <div className="text-xs font-medium text-slate-400">
-            <span>Fleet</span>
+            <span>Dashboard</span>
             <span className="mx-2 text-slate-300">/</span>
             <span className="text-slate-600 font-semibold">{activeTabMeta.breadcrumb}</span>
           </div>
@@ -177,7 +200,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Title & Action */}
+        {/* Title & Primary Action */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-[#0b1e36]">
@@ -199,7 +222,7 @@ export default function App() {
           )}
         </div>
 
-        {/* Notifications */}
+        {/* Notification Toast */}
         {notification && (
           <div
             className={`mb-5 p-3 rounded-xl flex items-center justify-between text-xs transition ${
@@ -228,7 +251,12 @@ export default function App() {
         {/* Dynamic Views */}
         {currentTab === 'agents' && (
           <>
-            <StatsOverview stats={stats} />
+            <StatsOverview
+              stats={stats}
+              currentStatus={filters.status}
+              onSelectStatus={(status) => setFilters((prev) => ({ ...prev, status }))}
+              onSelectAreasTab={() => setCurrentTab('areas')}
+            />
             <AgentList
               agents={agents}
               loading={loading}
@@ -263,6 +291,7 @@ export default function App() {
         )}
       </main>
 
+      {/* Modals */}
       <AgentFormModal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
@@ -273,7 +302,11 @@ export default function App() {
       <AgentDetailsModal
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
-        onEdit={handleOpenEditModal}
+        onEdit={(agent) => {
+          setIsDetailsOpen(false);
+          setEditingAgent(agent);
+          setIsFormOpen(true);
+        }}
         agent={detailsAgent}
       />
 
