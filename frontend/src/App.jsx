@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import StatsOverview from './components/StatsOverview';
 import AgentList from './components/AgentList';
-import OverviewView from './components/OverviewView';
 import ServiceAreasView from './components/ServiceAreasView';
 import AgentFormModal from './components/AgentFormModal';
 import AgentDetailsModal from './components/AgentDetailsModal';
@@ -159,11 +158,6 @@ export default function App() {
       title: 'Delivery Agent Hub',
       subtitle: 'Operations & Delivery Personnel Management',
     },
-    overview: {
-      breadcrumb: 'Overview',
-      title: 'Fleet Overview',
-      subtitle: 'System metrics and operational health',
-    },
     areas: {
       breadcrumb: 'Service areas',
       title: 'Service Areas',
@@ -263,14 +257,6 @@ export default function App() {
               isCached={isCached}
             />
           </>
-        )}
-
-        {currentTab === 'overview' && (
-          <OverviewView
-            stats={stats}
-            agents={agents}
-            onNavigateToAgents={() => setCurrentTab('agents')}
-          />
         )}
 
         {currentTab === 'areas' && (

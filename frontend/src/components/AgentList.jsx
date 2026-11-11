@@ -10,8 +10,7 @@ import {
   Download,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown,
-  Zap
+  ArrowDown
 } from 'lucide-react';
 
 export default function AgentList({
@@ -116,16 +115,6 @@ export default function AgentList({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {isCached && (
-            <span
-              title="Served from Redis In-Memory Cache"
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg select-none"
-            >
-              <Zap className="w-3.5 h-3.5 text-emerald-600 fill-emerald-600" />
-              <span>Redis Cache</span>
-            </span>
-          )}
-
           {/* Area Filter */}
           <div className="relative">
             <select
