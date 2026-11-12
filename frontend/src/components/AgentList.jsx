@@ -21,12 +21,11 @@ export default function AgentList({
   onView,
   onEdit,
   onDelete,
-  onToggleStatus,
-  isCached
+  onToggleStatus
 }) {
   const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'desc' });
 
-  // Get distinct service areas for the zone dropdown filter
+  // Extract distinct service areas for the filter dropdown
   const distinctAreas = useMemo(() => {
     const set = new Set();
     agents.forEach((a) => {
@@ -54,7 +53,6 @@ export default function AgentList({
         valB = Number(valB) || 0;
       } else {
         valA = String(valA || '').toLowerCase();
-        valB = String(valB || '').toLowerCase();
       }
 
       if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -100,7 +98,7 @@ export default function AgentList({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.03)] p-5">
+    <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.03)] p-4 sm:p-5">
       {/* Top Filter and Actions Toolbar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 mb-5">
         <div className="relative flex-1 max-w-md">
@@ -114,13 +112,13 @@ export default function AgentList({
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           {/* Area Filter */}
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-none">
             <select
               value={filters.service_area || ''}
               onChange={(e) => onFilterChange('service_area', e.target.value)}
-              className="appearance-none bg-white border border-slate-300 rounded-lg pl-3 pr-8 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#0b1e36] cursor-pointer"
+              className="w-full sm:w-auto appearance-none bg-white border border-slate-300 rounded-lg pl-3 pr-8 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#0b1e36] cursor-pointer"
             >
               <option value="">Zone: All areas</option>
               {distinctAreas.map((area) => (
@@ -135,11 +133,11 @@ export default function AgentList({
           </div>
 
           {/* Status Filter */}
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-none">
             <select
               value={filters.status}
               onChange={(e) => onFilterChange('status', e.target.value)}
-              className="appearance-none bg-white border border-slate-300 rounded-lg pl-3 pr-8 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#0b1e36] cursor-pointer"
+              className="w-full sm:w-auto appearance-none bg-white border border-slate-300 rounded-lg pl-3 pr-8 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#0b1e36] cursor-pointer"
             >
               <option value="all">Status: All agents</option>
               <option value="active">Status: Active</option>
@@ -156,7 +154,7 @@ export default function AgentList({
             onClick={exportCSV}
             disabled={sortedAgents.length === 0}
             title="Export agents list to CSV file"
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-lg transition disabled:opacity-40 cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-lg transition disabled:opacity-40 cursor-pointer"
           >
             <Download className="w-3.5 h-3.5 text-slate-600" />
             <span>Export CSV</span>
@@ -164,9 +162,9 @@ export default function AgentList({
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+      {/* Table Container with horizontal scrolling on mobile */}
+      <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+        <table className="w-full text-left border-collapse min-w-[620px]">
           <thead>
             <tr className="bg-[#f1f5f9] text-slate-600 text-[11px] uppercase tracking-wider font-semibold rounded-lg select-none">
               <th

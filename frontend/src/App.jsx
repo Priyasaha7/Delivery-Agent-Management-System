@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import StatsOverview from './components/StatsOverview';
 import AgentList from './components/AgentList';
-import ServiceAreasView from './components/ServiceAreasView';
 import AgentFormModal from './components/AgentFormModal';
 import AgentDetailsModal from './components/AgentDetailsModal';
 import DeleteConfirmModal from './components/DeleteConfirmModal';
@@ -19,9 +18,7 @@ export default function App() {
   const [agents, setAgents] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isCached, setIsCached] = useState(false);
   const [filters, setFilters] = useState({ search: '', status: 'all', service_area: '' });
-  const [currentTab, setCurrentTab] = useState('agents');
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState(null);
@@ -35,7 +32,7 @@ export default function App() {
   const [notification, setNotification] = useState(null);
   const notifyTimerRef = useRef(null);
 
-  // Global scroll lock preventing background from scrolling when ANY modal is open
+  // Global scroll lock preventing background from scrolling when any modal is open
   const isAnyModalOpen = isFormOpen || isDetailsOpen || Boolean(deletingAgent);
 
   useEffect(() => {
@@ -76,7 +73,6 @@ export default function App() {
         fetchStats().catch(() => null)
       ]);
       setAgents(agentRes.data || []);
-      setIsCached(Boolean(agentRes.cached));
       if (statsRes) setStats(statsRes);
     } catch (err) {
       showNotification('error', err.message || 'Failed to load delivery agents');
@@ -152,32 +148,35 @@ export default function App() {
     }
   }
 
-  const tabTitles = {
-    agents: {
-      breadcrumb: 'Delivery agents',
-      title: 'Delivery Agent Hub',
-      subtitle: 'Operations & Delivery Personnel Management',
-    },
-    areas: {
-      breadcrumb: 'Service areas',
-      title: 'Service Areas',
-      subtitle: 'Regional fleet allocation & coverage',
-    },
-  };
-
-  const activeTabMeta = tabTitles[currentTab] || tabTitles.agents;
-
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex font-sans antialiased">
-      <Sidebar currentTab={currentTab} onTabChange={setCurrentTab} />
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col md:flex-row font-sans antialiased">
+      {/* Desktop Sidebar (hidden on mobile) */}
+      <Sidebar />
 
-      <main className="flex-1 min-w-0 py-7 px-8 lg:px-12 flex flex-col">
-        {/* Top Header Breadcrumb & Admin Profile */}
-        <div className="flex items-center justify-between mb-6">
+      {/* Mobile Top Navigation Header */}
+      <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200 sticky top-0 z-30">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full border border-slate-300 bg-white flex items-center justify-center font-bold text-[#0b1e36] text-xs shadow-xs">
+            DA
+          </div>
+          <span className="text-sm font-bold text-[#0b1e36]">Delivery Agent Hub</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-600">
+            <User className="w-3.5 h-3.5 stroke-[2]" />
+          </div>
+          <span className="text-xs font-semibold text-[#0b1e36]">Admin</span>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="flex-1 min-w-0 p-4 sm:p-6 md:py-7 md:px-8 lg:px-12 flex flex-col">
+        {/* Desktop Breadcrumb & Admin Profile */}
+        <div className="hidden md:flex items-center justify-between mb-6">
           <div className="text-xs font-medium text-slate-400">
             <span>Dashboard</span>
             <span className="mx-2 text-slate-300">/</span>
-            <span className="text-slate-600 font-semibold">{activeTabMeta.breadcrumb}</span>
+            <span className="text-slate-600 font-semibold">Delivery agents</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -192,22 +191,20 @@ export default function App() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-[#0b1e36]">
-              {activeTabMeta.title}
+              Delivery Agent Hub
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              {activeTabMeta.subtitle}
+              Operations & Delivery Personnel Management
             </p>
           </div>
 
-          {currentTab === 'agents' && (
-            <button
-              onClick={handleOpenCreateModal}
-              className="inline-flex items-center gap-1.5 bg-[#0b1e36] hover:bg-[#132f54] text-white text-xs font-medium px-4 py-2.5 rounded-lg shadow-sm transition cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Delivery Agent</span>
-            </button>
-          )}
+          <button
+            onClick={handleOpenCreateModal}
+            className="inline-flex items-center justify-center gap-1.5 bg-[#0b1e36] hover:bg-[#132f54] text-white text-xs font-medium px-4 py-2.5 rounded-lg shadow-sm transition cursor-pointer self-start sm:self-auto"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Delivery Agent</span>
+          </button>
         </div>
 
         {/* Notification Toast */}
@@ -236,35 +233,24 @@ export default function App() {
           </div>
         )}
 
-        {/* Dynamic Views */}
-        {currentTab === 'agents' && (
-          <>
-            <StatsOverview
-              stats={stats}
-              currentStatus={filters.status}
-              onSelectStatus={(status) => setFilters((prev) => ({ ...prev, status }))}
-              onSelectAreasTab={() => setCurrentTab('areas')}
-            />
-            <AgentList
-              agents={agents}
-              loading={loading}
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onView={handleOpenDetailsModal}
-              onEdit={handleOpenEditModal}
-              onDelete={handleOpenDeleteModal}
-              onToggleStatus={handleToggleStatus}
-              isCached={isCached}
-            />
-          </>
-        )}
+        {/* Dashboard Statistics */}
+        <StatsOverview
+          stats={stats}
+          currentStatus={filters.status}
+          onSelectStatus={(status) => setFilters((prev) => ({ ...prev, status }))}
+        />
 
-        {currentTab === 'areas' && (
-          <ServiceAreasView
-            agents={agents}
-            onNavigateToAgents={() => setCurrentTab('agents')}
-          />
-        )}
+        {/* Agent Table & Filtering Controls */}
+        <AgentList
+          agents={agents}
+          loading={loading}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onView={handleOpenDetailsModal}
+          onEdit={handleOpenEditModal}
+          onDelete={handleOpenDeleteModal}
+          onToggleStatus={handleToggleStatus}
+        />
       </main>
 
       {/* Modals */}

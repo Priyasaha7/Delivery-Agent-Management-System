@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function StatsOverview({ stats, currentStatus = 'all', onSelectStatus, onSelectAreasTab }) {
+export default function StatsOverview({ stats, currentStatus = 'all', onSelectStatus }) {
   const items = [
     {
       id: 'all',
@@ -27,36 +27,39 @@ export default function StatsOverview({ stats, currentStatus = 'all', onSelectSt
       id: 'areas',
       label: 'SERVICE AREAS',
       value: stats ? stats.areas : 0,
-      onClick: () => onSelectAreasTab && onSelectAreasTab(),
+      onClick: null,
       isActive: false
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-4 mb-6 select-none">
-      {items.map((item, index) => (
-        <button
-          key={item.label}
-          type="button"
-          onClick={item.onClick}
-          title={item.id !== 'areas' ? `Click to filter by ${item.label.toLowerCase()}` : 'Click to view service zones'}
-          className={`text-left group transition-all p-1 rounded-lg ${
-            index !== 0 ? 'md:border-l md:border-slate-200 md:pl-6' : ''
-          } hover:opacity-80 cursor-pointer`}
-        >
-          <div className="flex items-center gap-1.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 group-hover:text-[#0b1e36]">
-              {item.label}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 py-3 sm:py-4 mb-5 select-none">
+      {items.map((item, index) => {
+        const isClickable = Boolean(item.onClick);
+        return (
+          <div
+            key={item.label}
+            onClick={item.onClick || undefined}
+            role={isClickable ? 'button' : undefined}
+            tabIndex={isClickable ? 0 : undefined}
+            className={`p-3 sm:p-1 rounded-lg transition-all ${
+              index !== 0 ? 'md:border-l md:border-slate-200 md:pl-6' : ''
+            } ${isClickable ? 'cursor-pointer hover:opacity-85' : 'cursor-default'}`}
+          >
+            <div className="flex items-center gap-1.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                {item.label}
+              </p>
+              {item.isActive && item.id !== 'all' && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0b1e36]" />
+              )}
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold text-[#0b1e36] mt-1">
+              {item.value}
             </p>
-            {item.isActive && item.id !== 'all' && (
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0b1e36]" />
-            )}
           </div>
-          <p className="text-3xl font-bold text-[#0b1e36] mt-1 group-hover:translate-x-0.5 transition-transform">
-            {item.value}
-          </p>
-        </button>
-      ))}
+        );
+      })}
     </div>
   );
 }
