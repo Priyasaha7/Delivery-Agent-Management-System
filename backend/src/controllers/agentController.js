@@ -49,11 +49,14 @@ function validateAgentInput(data, isUpdate = false) {
 }
 
 async function invalidateAgentCaches(agentId = null) {
-  await clearPattern('agents:list*');
-  await deleteCache('agents:stats');
+  const tasks = [
+    clearPattern('agents:list*'),
+    deleteCache('agents:stats')
+  ];
   if (agentId) {
-    await deleteCache(`agent:${agentId}`);
+    tasks.push(deleteCache(`agent:${agentId}`));
   }
+  await Promise.all(tasks);
 }
 
 async function getAgents(req, res) {
@@ -68,7 +71,7 @@ async function getAgents(req, res) {
       return res.json({ success: true, count: cached.length, data: cached, cached: true });
     }
 
-    let query = 'SELECT * FROM agents WHERE 1=1';
+    let query = 'SELECT id, full_name, phone, email, service_area, status, created_at, updated_at FROM agents WHERE 1=1';
     const params = [];
 
     if (status && status !== 'all') {
@@ -114,7 +117,10 @@ async function getAgentById(req, res) {
       return res.json({ success: true, data: cached, cached: true });
     }
 
-    const result = await pool.query('SELECT * FROM agents WHERE id = $1', [id]);
+    const result = await pool.query(
+      'SELECT id, full_name, phone, email, service_area, status, created_at, updated_at FROM agents WHERE id = $1',
+      [id]
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: `Agent with ID ${id} not found` });
@@ -172,6 +178,9 @@ async function createAgent(req, res) {
       data: newAgent
     });
   } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ success: false, error: 'An agent with this email address already exists' });
+    }
     console.error('createAgent error:', error.message);
     return res.status(500).json({ success: false, error: 'Internal server error while creating agent' });
   }
@@ -194,7 +203,7 @@ async function updateAgent(req, res) {
       return res.status(400).json({ success: false, error: 'At least one field is required to update' });
     }
 
-    const existingAgent = await pool.query('SELECT * FROM agents WHERE id = $1', [id]);
+    const existingAgent = await pool.query('SELECT id, email, full_name, phone, service_area, status FROM agents WHERE id = $1', [id]);
     if (existingAgent.rows.length === 0) {
       return res.status(404).json({ success: false, error: `Agent with ID ${id} not found` });
     }
@@ -236,6 +245,9 @@ async function updateAgent(req, res) {
       data: updatedAgent
     });
   } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ success: false, error: 'An agent with this email address already exists' });
+    }
     console.error('updateAgent error:', error.message);
     return res.status(500).json({ success: false, error: 'Internal server error while updating agent' });
   }
@@ -248,7 +260,7 @@ async function deleteAgent(req, res) {
       return res.status(400).json({ success: false, error: 'Invalid agent ID format' });
     }
 
-    const existingAgent = await pool.query('SELECT * FROM agents WHERE id = $1', [id]);
+    const existingAgent = await pool.query('SELECT id FROM agents WHERE id = $1', [id]);
     if (existingAgent.rows.length === 0) {
       return res.status(404).json({ success: false, error: `Agent with ID ${id} not found` });
     }

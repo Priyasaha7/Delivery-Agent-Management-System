@@ -11,3 +11,6 @@ CREATE TABLE IF NOT EXISTS agents (
 
 CREATE INDEX IF NOT EXISTS idx_agents_status ON agents(status);
 CREATE INDEX IF NOT EXISTS idx_agents_service_area ON agents(service_area);
+CREATE INDEX IF NOT EXISTS idx_agents_created_at ON agents(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_agents_status_created ON agents(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_agents_area_status ON agents(service_area, status);

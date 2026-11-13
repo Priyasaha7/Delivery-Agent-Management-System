@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const app = require('./app');
 const { pool } = require('./config/db');
+const redis = require('./config/redis');
 
 const PORT = process.env.PORT || 5000;
 
@@ -38,7 +39,27 @@ async function autoMigrate() {
   }
 }
 
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   console.log(`Delivery Agent API server running on port ${PORT}`);
   await autoMigrate();
 });
+
+async function gracefulShutdown(signal) {
+  console.log(`${signal} received: closing HTTP server and resources...`);
+  server.close(async () => {
+    try {
+      await pool.end();
+      if (redis && redis.status === 'ready') {
+        await redis.quit();
+      }
+      console.log('Database and cache connections closed cleanly.');
+      process.exit(0);
+    } catch (err) {
+      console.error('Error during graceful shutdown:', err.message);
+      process.exit(1);
+    }
+  });
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
